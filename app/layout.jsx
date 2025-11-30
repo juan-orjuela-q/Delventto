@@ -1,7 +1,7 @@
 import './globals.css'
-import { Inter } from 'next/font/google'
+import { Archivo } from 'next/font/google'
 
-const inter = Inter({ subsets: ['latin'] })
+const archivo = Archivo({ subsets: ['latin'] })
 
 export const metadata = {
   title: 'Delventto - Calculadora de Tarifas',
@@ -11,7 +11,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
-      <body className={inter.className}>{children}</body>
+      <body className={archivo.className}>{children}</body>
     </html>
   )
 }

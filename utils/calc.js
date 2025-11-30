@@ -3,24 +3,24 @@
  */
 export const DEFAULT_RATES = {
   alta: {
-    min: 520000,
-    max: 580000,
-    default: 550000,
+    min: 560000,
+    max: 620000,
+    default: 590000,
   },
   media: {
-    min: 330000,
-    max: 380000,
-    default: 355000,
+    min: 360000,
+    max: 420000,
+    default: 390000,
   },
   baja: {
-    min: 240000,
-    max: 290000,
-    default: 265000,
+    min: 260000,
+    max: 320000,
+    default: 290000,
   },
 };
 
-export const DEFAULT_EXTRA_GUEST_FEE = 40000;
-export const DEFAULT_CLEANING_FEE = 60000;
+export const DEFAULT_EXTRA_GUEST_FEE = 60000;
+export const DEFAULT_CLEANING_FEE = 80000;
 
 /**
  * Calcula el costo total de la reserva
@@ -89,6 +89,15 @@ export function formatCurrency(amount) {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
+}
+
+/**
+ * Formatea un número con separadores de miles (sin símbolo de moneda)
+ * @param {number} amount - Monto a formatear
+ * @returns {string} - Número formateado
+ */
+export function formatNumber(amount) {
+  return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
 /**

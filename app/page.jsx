@@ -11,6 +11,7 @@ import {
   DEFAULT_RATES,
   DEFAULT_EXTRA_GUEST_FEE,
   DEFAULT_CLEANING_FEE,
+  formatNumber,
 } from '@/utils/calc';
 import {
   calcularReservaConFechas,
@@ -31,6 +32,8 @@ export default function Home() {
   const [tarifaBaja, setTarifaBaja] = useState(DEFAULT_RATES.baja.default);
   const [tarifaExtra, setTarifaExtra] = useState(DEFAULT_EXTRA_GUEST_FEE);
   const [cleaningFee, setCleaningFee] = useState(DEFAULT_CLEANING_FEE);
+  const [descuento, setDescuento] = useState('0');
+  const [tipoDescuento, setTipoDescuento] = useState('');
   
   // Estado del resultado y vista previa
   const [infoTemporada, setInfoTemporada] = useState(null);
@@ -69,8 +72,9 @@ export default function Home() {
       const tarifaAltaNum = parseFloat(tarifaAlta);
       const tarifaMediaNum = parseFloat(tarifaMedia);
       const tarifaBajaNum = parseFloat(tarifaBaja);
-      const tarifaExtraNum = parseFloat(tarifaExtra);
+      const tarifaExtraNum = huespedesNum === 5 ? parseFloat(tarifaExtra) : 0;
       const cleaningFeeNum = parseFloat(cleaningFee);
+      const descuentoNum = parseFloat(descuento) || 0;
 
       // Validaciones
       if (!fechaInicio || !fechaSalida) {
@@ -84,15 +88,15 @@ export default function Home() {
 
       // Validar rangos de tarifas
       if (tarifaAltaNum < DEFAULT_RATES.alta.min || tarifaAltaNum > DEFAULT_RATES.alta.max) {
-        setError(`La tarifa alta debe estar entre $${DEFAULT_RATES.alta.min.toLocaleString()} y $${DEFAULT_RATES.alta.max.toLocaleString()}`);
+        setError(`La tarifa alta debe estar entre $${formatNumber(DEFAULT_RATES.alta.min)} y $${formatNumber(DEFAULT_RATES.alta.max)}`);
         return;
       }
       if (tarifaMediaNum < DEFAULT_RATES.media.min || tarifaMediaNum > DEFAULT_RATES.media.max) {
-        setError(`La tarifa media debe estar entre $${DEFAULT_RATES.media.min.toLocaleString()} y $${DEFAULT_RATES.media.max.toLocaleString()}`);
+        setError(`La tarifa media debe estar entre $${formatNumber(DEFAULT_RATES.media.min)} y $${formatNumber(DEFAULT_RATES.media.max)}`);
         return;
       }
       if (tarifaBajaNum < DEFAULT_RATES.baja.min || tarifaBajaNum > DEFAULT_RATES.baja.max) {
-        setError(`La tarifa baja debe estar entre $${DEFAULT_RATES.baja.min.toLocaleString()} y $${DEFAULT_RATES.baja.max.toLocaleString()}`);
+        setError(`La tarifa baja debe estar entre $${formatNumber(DEFAULT_RATES.baja.min)} y $${formatNumber(DEFAULT_RATES.baja.max)}`);
         return;
       }
 
@@ -108,6 +112,8 @@ export default function Home() {
         },
         tarifaExtra: tarifaExtraNum,
         cleaningFee: cleaningFeeNum,
+        descuento: descuentoNum,
+        tipoDescuento: tipoDescuento,
       });
 
       setResult(resultado);
@@ -127,6 +133,8 @@ export default function Home() {
     setTarifaBaja(DEFAULT_RATES.baja.default);
     setTarifaExtra(DEFAULT_EXTRA_GUEST_FEE);
     setCleaningFee(DEFAULT_CLEANING_FEE);
+    setDescuento('0');
+    setTipoDescuento('');
     setInfoTemporada(null);
     setResult(null);
     setShowResult(false);
@@ -188,7 +196,7 @@ export default function Home() {
           className="text-center mb-12"
         >
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Delventto
+            Delventto 🥂
           </h1>
           <p className="text-lg text-gray-600">
             Calculadora de Tarifas - Apartamento en Santa Marta
@@ -229,24 +237,24 @@ export default function Home() {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200"
+                className="p-4 bg-gradient-to-r from-primary-50 to-primary-100 rounded-lg border border-primary-200"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-2xl">📅</span>
-                  <h3 className="font-semibold text-blue-900">
+                  <h3 className="font-semibold text-primary-800">
                     Información de tu estancia
                   </h3>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                   <div>
-                    <span className="text-blue-600">Noches:</span>
-                    <span className="ml-2 font-semibold text-blue-900">
+                    <span className="text-primary-600">Noches:</span>
+                    <span className="ml-2 font-semibold text-primary-800">
                       {infoTemporada.noches}
                     </span>
                   </div>
                   <div>
-                    <span className="text-blue-600">Temporada:</span>
-                    <span className="ml-2 font-semibold text-blue-900 capitalize">
+                    <span className="text-primary-600">Temporada:</span>
+                    <span className="ml-2 font-semibold text-primary-800 capitalize">
                       {infoTemporada.temporada}
                     </span>
                   </div>
@@ -257,7 +265,7 @@ export default function Home() {
                   )}
                 </div>
                 {Object.keys(infoTemporada.diasPorTemporada).filter(k => infoTemporada.diasPorTemporada[k] > 0).length > 1 && (
-                  <div className="mt-3 pt-3 border-t border-blue-200 text-xs text-blue-700">
+                  <div className="mt-3 pt-3 border-t border-primary-200 text-xs text-primary-700">
                     <strong>Desglose:</strong>{' '}
                     {Object.entries(infoTemporada.diasPorTemporada)
                       .filter(([, dias]) => dias > 0)
@@ -289,49 +297,57 @@ export default function Home() {
               <div className="space-y-4">
                 {/* Tarifas por temporada */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Input
-                    label={`Temporada Alta ($${DEFAULT_RATES.alta.min.toLocaleString()} - $${DEFAULT_RATES.alta.max.toLocaleString()})`}
-                    type="number"
-                    value={tarifaAlta}
-                    onChange={setTarifaAlta}
-                    min={DEFAULT_RATES.alta.min}
-                    max={DEFAULT_RATES.alta.max}
-                    step="1000"
-                    required
-                  />
-                  <Input
-                    label={`Temporada Media ($${DEFAULT_RATES.media.min.toLocaleString()} - $${DEFAULT_RATES.media.max.toLocaleString()})`}
-                    type="number"
-                    value={tarifaMedia}
-                    onChange={setTarifaMedia}
-                    min={DEFAULT_RATES.media.min}
-                    max={DEFAULT_RATES.media.max}
-                    step="1000"
-                    required
-                  />
-                  <Input
-                    label={`Temporada Baja ($${DEFAULT_RATES.baja.min.toLocaleString()} - $${DEFAULT_RATES.baja.max.toLocaleString()})`}
-                    type="number"
-                    value={tarifaBaja}
-                    onChange={setTarifaBaja}
-                    min={DEFAULT_RATES.baja.min}
-                    max={DEFAULT_RATES.baja.max}
-                    step="1000"
-                    required
-                  />
+                  <div className={infoTemporada?.temporada === 'alta' ? 'ring-2 ring-primary-400 bg-primary-50 rounded-lg p-3' : ''}>
+                    <Input
+                      label={`Temporada Alta ($${formatNumber(DEFAULT_RATES.alta.min)} - $${formatNumber(DEFAULT_RATES.alta.max)})`}
+                      type="number"
+                      value={tarifaAlta}
+                      onChange={setTarifaAlta}
+                      min={DEFAULT_RATES.alta.min}
+                      max={DEFAULT_RATES.alta.max}
+                      step="1000"
+                      required
+                    />
+                  </div>
+                  <div className={infoTemporada?.temporada === 'media' ? 'ring-2 ring-primary-400 bg-primary-50 rounded-lg p-3' : ''}>
+                    <Input
+                      label={`Temporada Media ($${formatNumber(DEFAULT_RATES.media.min)} - $${formatNumber(DEFAULT_RATES.media.max)})`}
+                      type="number"
+                      value={tarifaMedia}
+                      onChange={setTarifaMedia}
+                      min={DEFAULT_RATES.media.min}
+                      max={DEFAULT_RATES.media.max}
+                      step="1000"
+                      required
+                    />
+                  </div>
+                  <div className={infoTemporada?.temporada === 'baja' ? 'ring-2 ring-primary-400 bg-primary-50 rounded-lg p-3' : ''}>
+                    <Input
+                      label={`Temporada Baja ($${formatNumber(DEFAULT_RATES.baja.min)} - $${formatNumber(DEFAULT_RATES.baja.max)})`}
+                      type="number"
+                      value={tarifaBaja}
+                      onChange={setTarifaBaja}
+                      min={DEFAULT_RATES.baja.min}
+                      max={DEFAULT_RATES.baja.max}
+                      step="1000"
+                      required
+                    />
+                  </div>
                 </div>
 
                 {/* Otros cargos */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Tarifa por huésped adicional (5°)"
-                    type="number"
-                    value={tarifaExtra}
-                    onChange={setTarifaExtra}
-                    min="0"
-                    step="1000"
-                    required
-                  />
+                  {parseInt(huespedes) === 5 && (
+                    <Input
+                      label="Tarifa por huésped adicional (5°)"
+                      type="number"
+                      value={tarifaExtra}
+                      onChange={setTarifaExtra}
+                      min="0"
+                      step="1000"
+                      required
+                    />
+                  )}
 
                   <Input
                     label="Fee de limpieza"
@@ -341,7 +357,46 @@ export default function Home() {
                     min="0"
                     step="1000"
                     required
+                    className={parseInt(huespedes) === 5 ? '' : 'md:col-span-2'}
                   />
+                </div>
+
+                {/* Campo de descuento */}
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      label="Descuento (%)"
+                      type="number"
+                      value={descuento}
+                      onChange={(value) => {
+                        setDescuento(value);
+                        // Detectar tipo de descuento común
+                        const num = parseFloat(value);
+                        if (num === 10) setTipoDescuento('Reserva directa');
+                        else if (num === 15) setTipoDescuento('Familiar/Sin amenidades');
+                        else setTipoDescuento('');
+                      }}
+                      min="0"
+                      max="100"
+                      step="1"
+                      placeholder="0"
+                    />
+                    {tipoDescuento && (
+                      <div className="flex items-end pb-3">
+                        <span className="text-sm font-medium text-green-700 bg-green-50 px-3 py-2 rounded-lg border border-green-200">
+                          ✓ {tipoDescuento}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      <strong className="text-gray-700">Descuentos sugeridos:</strong><br />
+                      • Reserva directa: <span className="font-semibold text-primary-600">10%</span><br />
+                      • Descuento familiar: <span className="font-semibold text-primary-600">15%</span><br />
+                      • Falta de amenidades: <span className="font-semibold text-primary-600">15%</span>
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -391,13 +446,13 @@ export default function Home() {
               <button
                 onClick={handleExportPDF}
                 disabled={isExporting}
-                className="flex-1 bg-gradient-to-r from-green-600 to-green-500 text-white font-semibold py-3 px-6 rounded-lg hover:from-green-700 hover:to-green-600 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-gradient-to-r from-secondary-500 to-secondary-600 text-dark-500 font-semibold py-3 px-6 rounded-lg hover:from-secondary-600 hover:to-secondary-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isExporting ? 'Generando PDF...' : '📄 Exportar a PDF'}
               </button>
               <button
                 onClick={handleExportJSON}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md hover:shadow-lg"
+                className="flex-1 bg-gradient-to-r from-primary-400 to-primary-500 text-white font-semibold py-3 px-6 rounded-lg hover:from-primary-500 hover:to-primary-600 transition-all duration-200 shadow-md hover:shadow-lg"
               >
                 💾 Exportar JSON
               </button>

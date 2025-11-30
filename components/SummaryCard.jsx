@@ -27,6 +27,10 @@ export default function SummaryCard({ result }) {
     costoBase,
     huespedesExtras,
     costoHuespedesExtras,
+    subtotalAntesDescuento,
+    descuento,
+    tipoDescuento,
+    montoDescuento,
     totalAlojamiento,
     totalFinal,
   } = result;
@@ -97,17 +101,17 @@ export default function SummaryCard({ result }) {
 
       {/* Desglose por temporada (si hay múltiples) */}
       {desglosePorTemporada && Object.keys(desglosePorTemporada).length > 1 && (
-        <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-          <h3 className="text-sm font-semibold text-blue-900 mb-3">
+        <div className="mb-6 p-4 bg-primary-50 rounded-lg border border-primary-200">
+          <h3 className="text-sm font-semibold text-primary-800 mb-3">
             Desglose por temporada:
           </h3>
           <div className="space-y-2">
             {Object.entries(desglosePorTemporada).map(([tipo, data]) => (
               <div key={tipo} className="flex justify-between text-sm">
-                <span className="text-blue-800 capitalize">
+                <span className="text-primary-700 capitalize">
                   {tipo} ({data.dias} {data.dias === 1 ? 'noche' : 'noches'}):
                 </span>
-                <span className="font-semibold text-blue-900">
+                <span className="font-semibold text-primary-800">
                   {formatCurrency(data.subtotal)}
                 </span>
               </div>
@@ -118,13 +122,13 @@ export default function SummaryCard({ result }) {
 
       {/* Festivos en rango */}
       {festivosEnRango && festivosEnRango.length > 0 && (
-        <div className="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-100">
-          <h3 className="text-sm font-semibold text-amber-900 mb-2">
+        <div className="mb-6 p-4 bg-secondary-100 rounded-lg border border-secondary-300">
+          <h3 className="text-sm font-semibold text-dark-500 mb-2">
             🎉 Festivos durante tu estancia:
           </h3>
           <ul className="space-y-1">
             {festivosEnRango.map((festivo, idx) => (
-              <li key={idx} className="text-sm text-amber-800">
+              <li key={idx} className="text-sm text-dark-700">
                 • {festivo.name} - {formatearFecha(festivo.date)}
               </li>
             ))}
@@ -141,7 +145,7 @@ export default function SummaryCard({ result }) {
           <span className="text-gray-900">{formatCurrency(costoBase)}</span>
         </div>
 
-        {huespedesExtras > 0 && (
+        {huespedesExtras > 0 && costoHuespedesExtras > 0 && (
           <div className="flex justify-between items-center">
             <span className="text-gray-600">
               Huésped adicional ({huespedesExtras} x {noches}{' '}
@@ -151,6 +155,26 @@ export default function SummaryCard({ result }) {
               {formatCurrency(costoHuespedesExtras)}
             </span>
           </div>
+        )}
+
+        {/* Subtotal antes de descuento */}
+        {descuento > 0 && (
+          <>
+            <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+              <span className="text-gray-600">Subtotal:</span>
+              <span className="text-gray-900">
+                {formatCurrency(subtotalAntesDescuento)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-secondary-700">
+                Descuento {tipoDescuento && `(${tipoDescuento})`} - {descuento}%:
+              </span>
+              <span className="text-secondary-700 font-semibold">
+                -{formatCurrency(montoDescuento)}
+              </span>
+            </div>
+          </>
         )}
 
         <div className="flex justify-between items-center pb-4 border-b border-gray-200">
@@ -176,8 +200,8 @@ export default function SummaryCard({ result }) {
       </div>
 
       {/* Nota adicional */}
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-        <p className="text-sm text-blue-800">
+      <div className="mt-6 p-4 bg-primary-50 rounded-lg border border-primary-200">
+        <p className="text-sm text-primary-700">
           <span className="font-semibold">Nota:</span> Esta es una cotización preliminar. 
           Los precios pueden variar según disponibilidad y condiciones especiales.
         </p>

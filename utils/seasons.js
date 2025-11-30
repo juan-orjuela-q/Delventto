@@ -42,11 +42,34 @@ export const FESTIVOS_COLOMBIA = {
 };
 
 /**
- * Definición de temporadas turísticas en Santa Marta, Colombia
- * Basado en patrones históricos de turismo
+ * Definición de temporadas turísticas en Colombia
+ * Basado en clasificación oficial del sector turístico colombiano
+ * 
+ * TEMPORADA ALTA: Alta demanda, máxima ocupación, tarifas más altas
+ * - 15 dic - 15 ene
+ * - Semana Santa
+ * - 20 jun - 15 jul
+ * - Puentes festivos especiales
+ * 
+ * TEMPORADA MEDIA: Demanda estable, precios moderados
+ * - 15 ene - finales mar
+ * - 1-14 dic
+ * - Fines de semana
+ * - Puentes festivos comunes
+ * 
+ * TEMPORADA BAJA: Menor demanda
+ * - Abr-may (excepto Semana Santa)
+ * - Final ago - sep
+ * - Entre semana oct-nov
  */
 export const TEMPORADAS_TURISTICAS = [
   // 2025
+  {
+    inicio: '2025-12-01',
+    fin: '2025-12-14',
+    tipo: 'media',
+    descripcion: 'Temporada Media - Principios de diciembre',
+  },
   {
     inicio: '2025-12-15',
     fin: '2026-01-15',
@@ -57,54 +80,66 @@ export const TEMPORADAS_TURISTICAS = [
   // 2026
   {
     inicio: '2026-01-16',
-    fin: '2026-03-15',
-    tipo: 'alta',
-    descripcion: 'Temporada Alta - Inicio de año y carnavales',
-  },
-  {
-    inicio: '2026-03-16',
-    fin: '2026-04-01',
+    fin: '2026-03-31',
     tipo: 'media',
-    descripcion: 'Temporada Media - Pre Semana Santa',
+    descripcion: 'Temporada Media - Inicio de año',
   },
   {
-    inicio: '2026-04-02',
-    fin: '2026-04-12',
+    inicio: '2026-04-01',
+    fin: '2026-04-06',
     tipo: 'alta',
     descripcion: 'Temporada Alta - Semana Santa',
   },
   {
-    inicio: '2026-04-13',
+    inicio: '2026-04-07',
     fin: '2026-05-31',
-    tipo: 'media',
-    descripcion: 'Temporada Media - Post Semana Santa',
+    tipo: 'baja',
+    descripcion: 'Temporada Baja - Post Semana Santa',
   },
   {
     inicio: '2026-06-01',
-    fin: '2026-06-30',
+    fin: '2026-06-19',
+    tipo: 'media',
+    descripcion: 'Temporada Media - Junio',
+  },
+  {
+    inicio: '2026-06-20',
+    fin: '2026-07-15',
     tipo: 'alta',
     descripcion: 'Temporada Alta - Vacaciones mitad de año',
   },
   {
-    inicio: '2026-07-01',
-    fin: '2026-09-30',
+    inicio: '2026-07-16',
+    fin: '2026-08-31',
     tipo: 'media',
-    descripcion: 'Temporada Media - Segundo semestre',
+    descripcion: 'Temporada Media - Julio-Agosto',
+  },
+  {
+    inicio: '2026-09-01',
+    fin: '2026-09-30',
+    tipo: 'baja',
+    descripcion: 'Temporada Baja - Septiembre',
   },
   {
     inicio: '2026-10-01',
-    fin: '2026-10-18',
+    fin: '2026-10-13',
     tipo: 'alta',
     descripcion: 'Temporada Alta - Puente de Octubre',
   },
   {
-    inicio: '2026-10-19',
+    inicio: '2026-10-14',
     fin: '2026-11-30',
     tipo: 'baja',
-    descripcion: 'Temporada Baja - Pre navidad',
+    descripcion: 'Temporada Baja - Entre semana oct-nov',
   },
   {
     inicio: '2026-12-01',
+    fin: '2026-12-14',
+    tipo: 'media',
+    descripcion: 'Temporada Media - Principios de diciembre',
+  },
+  {
+    inicio: '2026-12-15',
     fin: '2027-01-15',
     tipo: 'alta',
     descripcion: 'Temporada Alta - Navidad y Año Nuevo',
@@ -114,8 +149,8 @@ export const TEMPORADAS_TURISTICAS = [
   {
     inicio: '2027-01-16',
     fin: '2027-02-28',
-    tipo: 'alta',
-    descripcion: 'Temporada Alta - Inicio de año',
+    tipo: 'media',
+    descripcion: 'Temporada Media - Inicio de año',
   },
 ];
 
@@ -173,6 +208,16 @@ export function determinarTemporada(fechaInicio, fechaSalida) {
 }
 
 /**
+ * Verifica si una fecha es fin de semana (viernes, sábado, domingo)
+ * @param {Date} fecha - Fecha a verificar
+ * @returns {boolean} - True si es fin de semana
+ */
+function esFinDeSemana(fecha) {
+  const dia = fecha.getDay();
+  return dia === 5 || dia === 6 || dia === 0; // Viernes(5), Sábado(6), Domingo(0)
+}
+
+/**
  * Encuentra la temporada para un día específico
  * @param {Date} fecha - Fecha a verificar
  * @returns {Object} - Temporada correspondiente
@@ -180,18 +225,28 @@ export function determinarTemporada(fechaInicio, fechaSalida) {
 function encontrarTemporadaParaDia(fecha) {
   const fechaStr = fecha.toISOString().split('T')[0];
   
+  // Buscar en rangos definidos
   for (const temporada of TEMPORADAS_TURISTICAS) {
     if (fechaStr >= temporada.inicio && fechaStr <= temporada.fin) {
+      // Si estamos en temporada baja pero es fin de semana, elevar a media
+      if (temporada.tipo === 'baja' && esFinDeSemana(fecha)) {
+        return {
+          ...temporada,
+          tipo: 'media',
+          descripcion: temporada.descripcion + ' (Fin de semana)',
+        };
+      }
       return temporada;
     }
   }
   
-  // Si no se encuentra en rangos definidos, usar temporada baja por defecto
+  // Si no se encuentra en rangos definidos, verificar si es fin de semana
+  const tipoDefault = esFinDeSemana(fecha) ? 'media' : 'baja';
   return {
     inicio: fechaStr,
     fin: fechaStr,
-    tipo: 'baja',
-    descripcion: 'Temporada Baja - Default',
+    tipo: tipoDefault,
+    descripcion: esFinDeSemana(fecha) ? 'Temporada Media - Fin de semana' : 'Temporada Baja - Default',
   };
 }
 
@@ -238,6 +293,8 @@ function verificarSiFestivo(fechaInicio, fechaSalida) {
  * @param {Object} tarifas - Tarifas base por temporada
  * @param {number} tarifaExtra - Tarifa por huésped adicional
  * @param {number} cleaningFee - Fee de limpieza
+ * @param {number} descuento - Porcentaje de descuento (0-100)
+ * @param {string} tipoDescuento - Tipo de descuento aplicado
  * @returns {Object} - Cálculo detallado
  */
 export function calcularReservaConFechas({
@@ -247,6 +304,8 @@ export function calcularReservaConFechas({
   tarifas,
   tarifaExtra,
   cleaningFee,
+  descuento = 0,
+  tipoDescuento = '',
 }) {
   const info = determinarTemporada(fechaInicio, fechaSalida);
   const { noches, diasPorTemporada } = info;
@@ -277,10 +336,17 @@ export function calcularReservaConFechas({
   const huespedesExtras = Math.max(0, huespedes - 4);
   const costoHuespedesExtras = huespedesExtras * tarifaExtra * noches;
   
-  // Total de alojamiento
-  const totalAlojamiento = costoBase + costoHuespedesExtras;
+  // Subtotal antes de descuento
+  const subtotalAntesDescuento = costoBase + costoHuespedesExtras;
   
-  // Total final
+  // Aplicar descuento
+  const montoDescuento = (subtotalAntesDescuento * descuento) / 100;
+  const totalDespuesDescuento = subtotalAntesDescuento - montoDescuento;
+  
+  // Total de alojamiento (después de descuento)
+  const totalAlojamiento = totalDespuesDescuento;
+  
+  // Total final (agregar cleaning fee después del descuento)
   const totalFinal = totalAlojamiento + cleaningFee;
   
   return {
@@ -295,6 +361,10 @@ export function calcularReservaConFechas({
     costoBase,
     huespedesExtras,
     costoHuespedesExtras,
+    subtotalAntesDescuento,
+    descuento,
+    tipoDescuento,
+    montoDescuento,
     tarifaExtra,
     cleaningFee,
     totalAlojamiento,

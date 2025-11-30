@@ -119,23 +119,26 @@ totalAlojamiento = Σ(tarifaPorTemporada × díasEnTemporada) +
 totalFinal = totalAlojamiento + cleaningFee
 ```
 
-### Temporadas turísticas en Santa Marta
+### Temporadas turísticas en Colombia
 
-**Temporada Alta:**
-- Navidad y Año Nuevo (Dic 15 - Ene 15)
-- Inicio de año y carnavales (Ene 16 - Mar 15)
+Basado en la clasificación oficial del sector turístico colombiano:
+
+**Temporada Alta** (Alta demanda, máxima ocupación, tarifas más altas):
+- 15 de diciembre - 15 de enero
 - Semana Santa
-- Vacaciones mitad de año (Junio)
-- Puente de Octubre
+- 20 de junio - 15 de julio
+- Puentes festivos especiales
 
-**Temporada Media:**
-- Pre y post Semana Santa
-- Segundo semestre
-- Meses de transición
+**Temporada Media** (Demanda estable, precios moderados):
+- 15 de enero - finales de marzo
+- 1-14 de diciembre
+- Fines de semana en cualquier mes
+- Puentes festivos comunes
 
-**Temporada Baja:**
-- Noviembre (pre navidad)
-- Períodos sin festivos importantes
+**Temporada Baja** (Menor demanda):
+- Abril y mayo (excepto Semana Santa)
+- Final de agosto - septiembre
+- Entre semana en octubre-noviembre
 
 ## 🎨 Personalización
 
