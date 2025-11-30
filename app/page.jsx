@@ -1,46 +1,63 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import Input from '@/components/Input';
-import Select from '@/components/Select';
+import DateInput from '@/components/DateInput';
 import SummaryCard from '@/components/SummaryCard';
 import {
-  calcularReserva,
   DEFAULT_RATES,
   DEFAULT_EXTRA_GUEST_FEE,
   DEFAULT_CLEANING_FEE,
 } from '@/utils/calc';
+import {
+  calcularReservaConFechas,
+  obtenerFechaMinima,
+  obtenerFechaMaxima,
+  determinarTemporada,
+} from '@/utils/seasons';
 
 export default function Home() {
-  // Estados del formulario
-  const [temporada, setTemporada] = useState('media');
-  const [noches, setNoches] = useState('3');
+  // Estados del formulario - Fechas
+  const [fechaInicio, setFechaInicio] = useState('');
+  const [fechaSalida, setFechaSalida] = useState('');
   const [huespedes, setHuespedes] = useState('2');
   
-  // Estados de tarifas configurables
-  const [tarifaBase, setTarifaBase] = useState(DEFAULT_RATES.media.default);
+  // Estados de tarifas configurables por temporada
+  const [tarifaAlta, setTarifaAlta] = useState(DEFAULT_RATES.alta.default);
+  const [tarifaMedia, setTarifaMedia] = useState(DEFAULT_RATES.media.default);
+  const [tarifaBaja, setTarifaBaja] = useState(DEFAULT_RATES.baja.default);
   const [tarifaExtra, setTarifaExtra] = useState(DEFAULT_EXTRA_GUEST_FEE);
   const [cleaningFee, setCleaningFee] = useState(DEFAULT_CLEANING_FEE);
   
-  // Estado del resultado
+  // Estado del resultado y vista previa
+  const [infoTemporada, setInfoTemporada] = useState(null);
   const [result, setResult] = useState(null);
   const [showResult, setShowResult] = useState(false);
   const [error, setError] = useState('');
   const [isExporting, setIsExporting] = useState(false);
 
-  // Actualizar tarifa base cuando cambia la temporada
-  const handleTemporadaChange = (value) => {
-    setTemporada(value);
-    setTarifaBase(DEFAULT_RATES[value].default);
-  };
+  // Fechas mínima y máxima permitidas
+  const fechaMinima = obtenerFechaMinima();
+  const fechaMaxima = obtenerFechaMaxima();
 
-  // Obtener rangos de tarifa según temporada
-  const tarifaRange = useMemo(() => {
-    return DEFAULT_RATES[temporada];
-  }, [temporada]);
+  // Actualizar información de temporada cuando cambian las fechas
+  useEffect(() => {
+    if (fechaInicio && fechaSalida) {
+      try {
+        const info = determinarTemporada(fechaInicio, fechaSalida);
+        setInfoTemporada(info);
+        setError('');
+      } catch (err) {
+        setInfoTemporada(null);
+        setError(err.message);
+      }
+    } else {
+      setInfoTemporada(null);
+    }
+  }, [fechaInicio, fechaSalida]);
 
   // Validar y calcular
   const handleCalcular = (e) => {
@@ -48,34 +65,47 @@ export default function Home() {
     setError('');
 
     try {
-      const nochesNum = parseInt(noches);
       const huespedesNum = parseInt(huespedes);
-      const tarifaBaseNum = parseFloat(tarifaBase);
+      const tarifaAltaNum = parseFloat(tarifaAlta);
+      const tarifaMediaNum = parseFloat(tarifaMedia);
+      const tarifaBajaNum = parseFloat(tarifaBaja);
       const tarifaExtraNum = parseFloat(tarifaExtra);
       const cleaningFeeNum = parseFloat(cleaningFee);
 
       // Validaciones
-      if (nochesNum < 1) {
-        setError('El número de noches debe ser al menos 1');
+      if (!fechaInicio || !fechaSalida) {
+        setError('Debe seleccionar las fechas de ingreso y salida');
         return;
       }
       if (huespedesNum < 1 || huespedesNum > 5) {
         setError('El número de huéspedes debe estar entre 1 y 5');
         return;
       }
-      if (tarifaBaseNum < tarifaRange.min || tarifaBaseNum > tarifaRange.max) {
-        setError(
-          `La tarifa base debe estar entre $${tarifaRange.min.toLocaleString()} y $${tarifaRange.max.toLocaleString()}`
-        );
+
+      // Validar rangos de tarifas
+      if (tarifaAltaNum < DEFAULT_RATES.alta.min || tarifaAltaNum > DEFAULT_RATES.alta.max) {
+        setError(`La tarifa alta debe estar entre $${DEFAULT_RATES.alta.min.toLocaleString()} y $${DEFAULT_RATES.alta.max.toLocaleString()}`);
+        return;
+      }
+      if (tarifaMediaNum < DEFAULT_RATES.media.min || tarifaMediaNum > DEFAULT_RATES.media.max) {
+        setError(`La tarifa media debe estar entre $${DEFAULT_RATES.media.min.toLocaleString()} y $${DEFAULT_RATES.media.max.toLocaleString()}`);
+        return;
+      }
+      if (tarifaBajaNum < DEFAULT_RATES.baja.min || tarifaBajaNum > DEFAULT_RATES.baja.max) {
+        setError(`La tarifa baja debe estar entre $${DEFAULT_RATES.baja.min.toLocaleString()} y $${DEFAULT_RATES.baja.max.toLocaleString()}`);
         return;
       }
 
-      // Calcular
-      const resultado = calcularReserva({
-        temporada,
-        noches: nochesNum,
+      // Calcular con el nuevo sistema de fechas
+      const resultado = calcularReservaConFechas({
+        fechaInicio,
+        fechaSalida,
         huespedes: huespedesNum,
-        tarifaBase: tarifaBaseNum,
+        tarifas: {
+          alta: tarifaAltaNum,
+          media: tarifaMediaNum,
+          baja: tarifaBajaNum,
+        },
         tarifaExtra: tarifaExtraNum,
         cleaningFee: cleaningFeeNum,
       });
@@ -89,12 +119,15 @@ export default function Home() {
 
   // Resetear formulario
   const handleReset = () => {
-    setTemporada('media');
-    setNoches('3');
+    setFechaInicio('');
+    setFechaSalida('');
     setHuespedes('2');
-    setTarifaBase(DEFAULT_RATES.media.default);
+    setTarifaAlta(DEFAULT_RATES.alta.default);
+    setTarifaMedia(DEFAULT_RATES.media.default);
+    setTarifaBaja(DEFAULT_RATES.baja.default);
     setTarifaExtra(DEFAULT_EXTRA_GUEST_FEE);
     setCleaningFee(DEFAULT_CLEANING_FEE);
+    setInfoTemporada(null);
     setResult(null);
     setShowResult(false);
     setError('');
@@ -170,61 +203,125 @@ export default function Home() {
           className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-8 mb-8"
         >
           <form onSubmit={handleCalcular} className="space-y-6">
-            {/* Temporada */}
-            <Select
-              label="Temporada"
-              value={temporada}
-              onChange={handleTemporadaChange}
-              options={[
-                { value: 'baja', label: 'Temporada Baja' },
-                { value: 'media', label: 'Temporada Media' },
-                { value: 'alta', label: 'Temporada Alta' },
-              ]}
-              required
-            />
-
-            {/* Grid de inputs principales */}
+            {/* Selector de Fechas */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
-                label="Número de noches"
-                type="number"
-                value={noches}
-                onChange={setNoches}
-                min="1"
-                placeholder="Ej: 3"
+              <DateInput
+                label="Fecha de ingreso (Check-in)"
+                value={fechaInicio}
+                onChange={setFechaInicio}
+                min={fechaMinima}
+                max={fechaMaxima}
                 required
               />
 
-              <Input
-                label="Número de huéspedes (máx. 5)"
-                type="number"
-                value={huespedes}
-                onChange={setHuespedes}
-                min="1"
-                max="5"
-                placeholder="Ej: 2"
+              <DateInput
+                label="Fecha de salida (Check-out)"
+                value={fechaSalida}
+                onChange={setFechaSalida}
+                min={fechaInicio || fechaMinima}
+                max={fechaMaxima}
                 required
               />
             </div>
 
+            {/* Información de temporada detectada */}
+            {infoTemporada && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">📅</span>
+                  <h3 className="font-semibold text-blue-900">
+                    Información de tu estancia
+                  </h3>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <span className="text-blue-600">Noches:</span>
+                    <span className="ml-2 font-semibold text-blue-900">
+                      {infoTemporada.noches}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-blue-600">Temporada:</span>
+                    <span className="ml-2 font-semibold text-blue-900 capitalize">
+                      {infoTemporada.temporada}
+                    </span>
+                  </div>
+                  {infoTemporada.esFestivo?.length > 0 && (
+                    <div className="col-span-2 md:col-span-1">
+                      <span className="text-amber-600">🎉 {infoTemporada.esFestivo.length} festivo(s)</span>
+                    </div>
+                  )}
+                </div>
+                {Object.keys(infoTemporada.diasPorTemporada).filter(k => infoTemporada.diasPorTemporada[k] > 0).length > 1 && (
+                  <div className="mt-3 pt-3 border-t border-blue-200 text-xs text-blue-700">
+                    <strong>Desglose:</strong>{' '}
+                    {Object.entries(infoTemporada.diasPorTemporada)
+                      .filter(([, dias]) => dias > 0)
+                      .map(([tipo, dias]) => `${dias} noche(s) en temporada ${tipo}`)
+                      .join(' • ')}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* Número de huéspedes */}
+            <Input
+              label="Número de huéspedes (máx. 5)"
+              type="number"
+              value={huespedes}
+              onChange={setHuespedes}
+              min="1"
+              max="5"
+              placeholder="Ej: 2"
+              required
+            />
+
             {/* Configuración de tarifas */}
             <div className="pt-6 border-t border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Configuración de Tarifas
+                Configuración de Tarifas por Temporada
               </h3>
               
               <div className="space-y-4">
-                <Input
-                  label={`Tarifa base por noche - Temporada ${temporada.charAt(0).toUpperCase() + temporada.slice(1)} ($${tarifaRange.min.toLocaleString()} - $${tarifaRange.max.toLocaleString()})`}
-                  type="number"
-                  value={tarifaBase}
-                  onChange={setTarifaBase}
-                  min={tarifaRange.min}
-                  max={tarifaRange.max}
-                  step="1000"
-                  required
-                />
+                {/* Tarifas por temporada */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Input
+                    label={`Temporada Alta ($${DEFAULT_RATES.alta.min.toLocaleString()} - $${DEFAULT_RATES.alta.max.toLocaleString()})`}
+                    type="number"
+                    value={tarifaAlta}
+                    onChange={setTarifaAlta}
+                    min={DEFAULT_RATES.alta.min}
+                    max={DEFAULT_RATES.alta.max}
+                    step="1000"
+                    required
+                  />
+                  <Input
+                    label={`Temporada Media ($${DEFAULT_RATES.media.min.toLocaleString()} - $${DEFAULT_RATES.media.max.toLocaleString()})`}
+                    type="number"
+                    value={tarifaMedia}
+                    onChange={setTarifaMedia}
+                    min={DEFAULT_RATES.media.min}
+                    max={DEFAULT_RATES.media.max}
+                    step="1000"
+                    required
+                  />
+                  <Input
+                    label={`Temporada Baja ($${DEFAULT_RATES.baja.min.toLocaleString()} - $${DEFAULT_RATES.baja.max.toLocaleString()})`}
+                    type="number"
+                    value={tarifaBaja}
+                    onChange={setTarifaBaja}
+                    min={DEFAULT_RATES.baja.min}
+                    max={DEFAULT_RATES.baja.max}
+                    step="1000"
+                    required
+                  />
+                </div>
 
+                {/* Otros cargos */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
                     label="Tarifa por huésped adicional (5°)"

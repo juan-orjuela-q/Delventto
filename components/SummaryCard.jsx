@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { formatCurrency, capitalize } from '@/utils/calc';
+import { formatearFecha } from '@/utils/seasons';
 
 /**
  * Componente para mostrar el resumen de la cotización
@@ -13,10 +14,14 @@ export default function SummaryCard({ result }) {
   if (!result) return null;
 
   const {
-    temporada,
+    temporadaPredominante,
+    fechaInicio,
+    fechaSalida,
     noches,
     huespedes,
-    tarifaBase,
+    diasPorTemporada,
+    desglosePorTemporada,
+    festivosEnRango,
     tarifaExtra,
     cleaningFee,
     costoBase,
@@ -25,6 +30,10 @@ export default function SummaryCard({ result }) {
     totalAlojamiento,
     totalFinal,
   } = result;
+  
+  // Para compatibilidad con el formato anterior
+  const temporada = temporadaPredominante || result.temporada;
+  const tarifaBase = result.tarifaBase;
 
   return (
     <motion.div
@@ -46,8 +55,24 @@ export default function SummaryCard({ result }) {
 
       {/* Detalles de la reserva */}
       <div className="space-y-4 mb-6">
+        {fechaInicio && fechaSalida && (
+          <>
+            <div className="flex justify-between items-center py-2">
+              <span className="text-gray-600">Check-in:</span>
+              <span className="font-semibold text-gray-900">
+                {formatearFecha(fechaInicio)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2">
+              <span className="text-gray-600">Check-out:</span>
+              <span className="font-semibold text-gray-900">
+                {formatearFecha(fechaSalida)}
+              </span>
+            </div>
+          </>
+        )}
         <div className="flex justify-between items-center py-2">
-          <span className="text-gray-600">Temporada:</span>
+          <span className="text-gray-600">Temporada predominante:</span>
           <span className="font-semibold text-gray-900 capitalize">
             {capitalize(temporada)}
           </span>
@@ -60,13 +85,52 @@ export default function SummaryCard({ result }) {
           <span className="text-gray-600">Número de huéspedes:</span>
           <span className="font-semibold text-gray-900">{huespedes}</span>
         </div>
-        <div className="flex justify-between items-center py-2">
-          <span className="text-gray-600">Tarifa base por noche:</span>
-          <span className="font-semibold text-gray-900">
-            {formatCurrency(tarifaBase)}
-          </span>
-        </div>
+        {tarifaBase && (
+          <div className="flex justify-between items-center py-2">
+            <span className="text-gray-600">Tarifa base por noche:</span>
+            <span className="font-semibold text-gray-900">
+              {formatCurrency(tarifaBase)}
+            </span>
+          </div>
+        )}
       </div>
+
+      {/* Desglose por temporada (si hay múltiples) */}
+      {desglosePorTemporada && Object.keys(desglosePorTemporada).length > 1 && (
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+          <h3 className="text-sm font-semibold text-blue-900 mb-3">
+            Desglose por temporada:
+          </h3>
+          <div className="space-y-2">
+            {Object.entries(desglosePorTemporada).map(([tipo, data]) => (
+              <div key={tipo} className="flex justify-between text-sm">
+                <span className="text-blue-800 capitalize">
+                  {tipo} ({data.dias} {data.dias === 1 ? 'noche' : 'noches'}):
+                </span>
+                <span className="font-semibold text-blue-900">
+                  {formatCurrency(data.subtotal)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Festivos en rango */}
+      {festivosEnRango && festivosEnRango.length > 0 && (
+        <div className="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-100">
+          <h3 className="text-sm font-semibold text-amber-900 mb-2">
+            🎉 Festivos durante tu estancia:
+          </h3>
+          <ul className="space-y-1">
+            {festivosEnRango.map((festivo, idx) => (
+              <li key={idx} className="text-sm text-amber-800">
+                • {festivo.name} - {formatearFecha(festivo.date)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Desglose de costos */}
       <div className="border-t border-gray-200 pt-4 space-y-3">

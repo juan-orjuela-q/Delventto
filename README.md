@@ -12,11 +12,15 @@ Aplicación web para calcular tarifas de alquiler de apartamento en Santa Marta,
 
 ## 📋 Características
 
-✅ Cálculo de tarifas por temporada (Alta, Media, Baja)  
-✅ Configuración flexible de tarifas base  
+✅ **Selector de fechas inteligente** (Check-in / Check-out)  
+✅ **Detección automática de temporadas turísticas** en Colombia  
+✅ **Cálculo por múltiples temporadas** en una misma estancia  
+✅ **Base de datos de festivos colombianos** (2025-2027)  
+✅ Configuración flexible de tarifas por temporada  
 ✅ Tarifa por huésped adicional (5° huésped)  
 ✅ Fee de limpieza configurable  
-✅ Resumen detallado de costos  
+✅ Resumen detallado de costos con desglose  
+✅ Alertas de festivos durante la estancia  
 ✅ Exportación a PDF  
 ✅ Exportación a JSON  
 ✅ Diseño responsivo y moderno  
@@ -63,14 +67,16 @@ npm run lint     # Linter
 delventto-calculator/
 ├── app/
 │   ├── layout.jsx       # Layout principal
-│   ├── page.jsx         # Página principal
+│   ├── page.jsx         # Página principal con selector de fechas
 │   └── globals.css      # Estilos globales
 ├── components/
 │   ├── Input.jsx        # Componente input reutilizable
+│   ├── DateInput.jsx    # Componente para selección de fechas
 │   ├── Select.jsx       # Componente select reutilizable
-│   └── SummaryCard.jsx  # Tarjeta de resumen
+│   └── SummaryCard.jsx  # Tarjeta de resumen con desglose
 ├── utils/
-│   └── calc.js          # Lógica de cálculo
+│   ├── calc.js          # Lógica de cálculo básica
+│   └── seasons.js       # Temporadas y festivos de Colombia
 ├── package.json
 ├── tailwind.config.js
 ├── postcss.config.js
@@ -97,12 +103,39 @@ delventto-calculator/
 
 ## 🧮 Fórmula de cálculo
 
+### Sistema inteligente de temporadas
+
+El sistema ahora calcula automáticamente las temporadas según las fechas seleccionadas:
+
 ```javascript
-totalAlojamiento = tarifaBase × noches + 
-                   (huéspedes > 4 ? (huéspedes - 4) × tarifaExtra × noches : 0)
+// Para cada noche de la estancia
+Para cada día entre check-in y check-out:
+  - Determinar temporada del día (alta/media/baja)
+  - Aplicar tarifa correspondiente
+
+totalAlojamiento = Σ(tarifaPorTemporada × díasEnTemporada) + 
+                   (huéspedes > 4 ? (huéspedes - 4) × tarifaExtra × totalNoches : 0)
 
 totalFinal = totalAlojamiento + cleaningFee
 ```
+
+### Temporadas turísticas en Santa Marta
+
+**Temporada Alta:**
+- Navidad y Año Nuevo (Dic 15 - Ene 15)
+- Inicio de año y carnavales (Ene 16 - Mar 15)
+- Semana Santa
+- Vacaciones mitad de año (Junio)
+- Puente de Octubre
+
+**Temporada Media:**
+- Pre y post Semana Santa
+- Segundo semestre
+- Meses de transición
+
+**Temporada Baja:**
+- Noviembre (pre navidad)
+- Períodos sin festivos importantes
 
 ## 🎨 Personalización
 
