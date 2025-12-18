@@ -14,6 +14,7 @@ export default function SummaryCard({ result }) {
   if (!result) return null;
 
   const {
+    nombreCliente,
     temporadaPredominante,
     fechaInicio,
     fechaSalida,
@@ -52,6 +53,11 @@ export default function SummaryCard({ result }) {
         <h2 className="text-2xl font-bold text-gray-900">
           Resumen de Cotización
         </h2>
+        {nombreCliente && (
+          <p className="text-lg text-primary-600 mt-2 font-semibold">
+            {nombreCliente}
+          </p>
+        )}
         <p className="text-sm text-gray-500 mt-1">
           Apartamento en Santa Marta
         </p>
@@ -75,12 +81,6 @@ export default function SummaryCard({ result }) {
             </div>
           </>
         )}
-        <div className="flex justify-between items-center py-2">
-          <span className="text-gray-600">Temporada predominante:</span>
-          <span className="font-semibold text-gray-900 capitalize">
-            {capitalize(temporada)}
-          </span>
-        </div>
         <div className="flex justify-between items-center py-2">
           <span className="text-gray-600">Número de noches:</span>
           <span className="font-semibold text-gray-900">{noches}</span>
@@ -120,22 +120,6 @@ export default function SummaryCard({ result }) {
         </div>
       )}
 
-      {/* Festivos en rango */}
-      {festivosEnRango && festivosEnRango.length > 0 && (
-        <div className="mb-6 p-4 bg-secondary-100 rounded-lg border border-secondary-300">
-          <h3 className="text-sm font-semibold text-dark-500 mb-2">
-            🎉 Festivos durante tu estancia:
-          </h3>
-          <ul className="space-y-1">
-            {festivosEnRango.map((festivo, idx) => (
-              <li key={idx} className="text-sm text-dark-700">
-                • {festivo.name} - {formatearFecha(festivo.date)}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
       {/* Desglose de costos */}
       <div className="border-t border-gray-200 pt-4 space-y-3">
         <div className="flex justify-between items-center">
@@ -168,7 +152,7 @@ export default function SummaryCard({ result }) {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-secondary-700">
-                Descuento {tipoDescuento && `(${tipoDescuento})`} - {descuento}%:
+                Descuento {descuento}%:
               </span>
               <span className="text-secondary-700 font-semibold">
                 -{formatCurrency(montoDescuento)}

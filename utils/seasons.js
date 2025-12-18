@@ -287,6 +287,7 @@ function verificarSiFestivo(fechaInicio, fechaSalida) {
 
 /**
  * Calcula el precio considerando múltiples temporadas en una estancia
+ * @param {string} nombreCliente - Nombre del cliente
  * @param {Date} fechaInicio - Fecha de check-in
  * @param {Date} fechaSalida - Fecha de check-out
  * @param {number} huespedes - Número de huéspedes
@@ -298,6 +299,7 @@ function verificarSiFestivo(fechaInicio, fechaSalida) {
  * @returns {Object} - Cálculo detallado
  */
 export function calcularReservaConFechas({
+  nombreCliente = '',
   fechaInicio,
   fechaSalida,
   huespedes,
@@ -350,6 +352,7 @@ export function calcularReservaConFechas({
   const totalFinal = totalAlojamiento + cleaningFee;
   
   return {
+    nombreCliente,
     fechaInicio,
     fechaSalida,
     noches,
@@ -374,11 +377,14 @@ export function calcularReservaConFechas({
 
 /**
  * Formatea una fecha en formato legible
- * @param {string} fecha - Fecha en formato ISO
+ * @param {string} fecha - Fecha en formato ISO (YYYY-MM-DD)
  * @returns {string} - Fecha formateada
  */
 export function formatearFecha(fecha) {
-  const date = new Date(fecha);
+  // Evitar problemas de zona horaria usando la fecha directamente
+  const [year, month, day] = fecha.split('-');
+  const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  
   return new Intl.DateTimeFormat('es-CO', {
     weekday: 'short',
     year: 'numeric',

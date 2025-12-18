@@ -22,6 +22,7 @@ import {
 
 export default function Home() {
   // Estados del formulario - Fechas
+  const [nombreCliente, setNombreCliente] = useState('');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaSalida, setFechaSalida] = useState('');
   const [huespedes, setHuespedes] = useState('2');
@@ -102,6 +103,7 @@ export default function Home() {
 
       // Calcular con el nuevo sistema de fechas
       const resultado = calcularReservaConFechas({
+        nombreCliente,
         fechaInicio,
         fechaSalida,
         huespedes: huespedesNum,
@@ -125,6 +127,7 @@ export default function Home() {
 
   // Resetear formulario
   const handleReset = () => {
+    setNombreCliente('');
     setFechaInicio('');
     setFechaSalida('');
     setHuespedes('2');
@@ -162,7 +165,13 @@ export default function Home() {
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
       pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-      pdf.save(`cotizacion-delventto-${Date.now()}.pdf`);
+      
+      // Nombre del archivo con cliente y fecha
+      const nombreArchivo = nombreCliente 
+        ? `cotizacion-${nombreCliente.replace(/\s+/g, '-').toLowerCase()}-${new Date().toLocaleDateString('es-CO').replace(/\//g, '-')}.pdf`
+        : `cotizacion-delventto-${Date.now()}.pdf`;
+      
+      pdf.save(nombreArchivo);
     } catch (err) {
       setError('Error al generar el PDF');
       console.error(err);
@@ -211,6 +220,15 @@ export default function Home() {
           className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-8 mb-8"
         >
           <form onSubmit={handleCalcular} className="space-y-6">
+            {/* Nombre del cliente */}
+            <Input
+              label="Nombre del cliente"
+              type="text"
+              value={nombreCliente}
+              onChange={setNombreCliente}
+              placeholder="Ej: Juan Pérez"
+            />
+
             {/* Selector de Fechas */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <DateInput
@@ -446,15 +464,9 @@ export default function Home() {
               <button
                 onClick={handleExportPDF}
                 disabled={isExporting}
-                className="flex-1 bg-gradient-to-r from-secondary-500 to-secondary-600 text-dark-500 font-semibold py-3 px-6 rounded-lg hover:from-secondary-600 hover:to-secondary-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-dark-500 font-semibold py-3 px-6 rounded-lg hover:from-secondary-600 hover:to-secondary-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isExporting ? 'Generando PDF...' : '📄 Exportar a PDF'}
-              </button>
-              <button
-                onClick={handleExportJSON}
-                className="flex-1 bg-gradient-to-r from-primary-400 to-primary-500 text-white font-semibold py-3 px-6 rounded-lg hover:from-primary-500 hover:to-primary-600 transition-all duration-200 shadow-md hover:shadow-lg"
-              >
-                💾 Exportar JSON
               </button>
             </motion.div>
           </>
