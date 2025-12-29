@@ -3,19 +3,19 @@
  */
 export const DEFAULT_RATES = {
   alta: {
-    min: 560000,
-    max: 620000,
-    default: 590000,
+    min: 440000,
+    max: 540000,
+    default: 490000,
   },
   media: {
-    min: 360000,
-    max: 420000,
-    default: 390000,
+    min: 265000,
+    max: 365000,
+    default: 315000,
   },
   baja: {
-    min: 260000,
-    max: 320000,
-    default: 290000,
+    min: 180000,
+    max: 280000,
+    default: 230000,
   },
 };
 

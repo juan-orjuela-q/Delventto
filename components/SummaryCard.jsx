@@ -89,14 +89,34 @@ export default function SummaryCard({ result }) {
           <span className="text-gray-600">Número de huéspedes:</span>
           <span className="font-semibold text-gray-900">{huespedes}</span>
         </div>
-        {tarifaBase && (
-          <div className="flex justify-between items-center py-2">
-            <span className="text-gray-600">Tarifa base por noche:</span>
-            <span className="font-semibold text-gray-900">
-              {formatCurrency(tarifaBase)}
+      </div>
+
+      {/* Valor por noche */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-700 font-medium">Valor por noche:</span>
+            <span className="text-lg font-semibold text-gray-900">
+              {formatCurrency(Math.round(costoBase / noches))}
             </span>
           </div>
-        )}
+          
+          {descuento > 0 && (
+            <>
+              <div className="flex justify-between items-center pt-3 border-t border-gray-300">
+                <div className="flex flex-col">
+                  <span className="text-green-700 font-medium">Valor por noche con descuento:</span>
+                  <span className="text-xs text-green-600 mt-1">
+                    Descuento {descuento}% aplicado · Ahorras {formatCurrency(Math.round(montoDescuento / noches))} por noche
+                  </span>
+                </div>
+                <span className="text-xl font-bold text-green-600">
+                  {formatCurrency(Math.round((costoBase - montoDescuento) / noches))}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Desglose por temporada (si hay múltiples) */}
@@ -141,37 +161,20 @@ export default function SummaryCard({ result }) {
           </div>
         )}
 
-        {/* Subtotal antes de descuento */}
         {descuento > 0 && (
-          <>
-            <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-              <span className="text-gray-600">Subtotal:</span>
-              <span className="text-gray-900">
-                {formatCurrency(subtotalAntesDescuento)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-secondary-700">
-                Descuento {descuento}%:
-              </span>
-              <span className="text-secondary-700 font-semibold">
-                -{formatCurrency(montoDescuento)}
-              </span>
-            </div>
-          </>
+          <div className="flex justify-between items-center">
+            <span className="text-green-700 font-medium">
+              - Descuento {descuento}%:
+            </span>
+            <span className="text-green-700 font-semibold">
+              -{formatCurrency(montoDescuento)}
+            </span>
+          </div>
         )}
 
         <div className="flex justify-between items-center pb-4 border-b border-gray-200">
-          <span className="text-gray-600">Fee de limpieza:</span>
+          <span className="text-gray-600">+ Fee de limpieza:</span>
           <span className="text-gray-900">{formatCurrency(cleaningFee)}</span>
-        </div>
-
-        {/* Subtotal */}
-        <div className="flex justify-between items-center pt-2">
-          <span className="font-semibold text-gray-700">Total alojamiento:</span>
-          <span className="font-semibold text-gray-900">
-            {formatCurrency(totalAlojamiento)}
-          </span>
         </div>
 
         {/* Total Final */}
@@ -183,13 +186,28 @@ export default function SummaryCard({ result }) {
         </div>
       </div>
 
-      {/* Nota adicional */}
-      <div className="mt-6 p-4 bg-primary-50 rounded-lg border border-primary-200">
-        <p className="text-sm text-primary-700">
-          <span className="font-semibold">Nota:</span> Esta es una cotización preliminar. 
-          Los precios pueden variar según disponibilidad y condiciones especiales.
-        </p>
-      </div>
+      {/* Aviso de descuento (si aplica) */}
+      {descuento > 0 && (
+        <div className="mt-6 p-5 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border-2 border-green-300 shadow-sm">
+          <div className="flex items-start gap-3">
+            <span className="text-3xl">🎉</span>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-green-800 mb-2">
+                ¡Excelente noticia!
+              </h3>
+              <p className="text-green-700 font-medium">
+                Con el descuento del <span className="font-bold text-xl">{descuento}%</span> aplicado, 
+                estás ahorrando <span className="font-bold text-xl">{formatCurrency(montoDescuento)}</span> en tu estancia.
+              </p>
+              {tipoDescuento && (
+                <p className="text-sm text-green-600 mt-2">
+                  Tipo de descuento: {tipoDescuento}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
