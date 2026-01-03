@@ -96,7 +96,7 @@ export default function SummaryCard({ result }) {
           <div className="flex justify-between items-center">
             <span className="text-gray-700 font-medium">Valor por noche:</span>
             <span className="text-lg font-semibold text-gray-900">
-              {formatCurrency(Math.round(costoBase / noches))}
+              {formatCurrency(Math.round((costoBase + costoHuespedesExtras) / noches))}
             </span>
           </div>
           
@@ -110,7 +110,7 @@ export default function SummaryCard({ result }) {
                   </span>
                 </div>
                 <span className="text-xl font-bold text-green-600">
-                  {formatCurrency(Math.round((costoBase - montoDescuento) / noches))}
+                  {formatCurrency(Math.round((costoBase + costoHuespedesExtras - montoDescuento) / noches))}
                 </span>
               </div>
             </>
@@ -145,19 +145,8 @@ export default function SummaryCard({ result }) {
           <span className="text-gray-600">
             Alojamiento ({noches} {noches === 1 ? 'noche' : 'noches'}):
           </span>
-          <span className="text-gray-900">{formatCurrency(costoBase)}</span>
+          <span className="text-gray-900">{formatCurrency(costoBase + costoHuespedesExtras)}</span>
         </div>
-
-        {huespedesExtras > 0 && costoHuespedesExtras > 0 && (
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">
-              Huéspedes adicionales ({huespedesExtras} {huespedesExtras === 1 ? 'huésped' : 'huéspedes'}):
-            </span>
-            <span className="text-gray-900">
-              {formatCurrency(costoHuespedesExtras)}
-            </span>
-          </div>
-        )}
 
         {descuento > 0 && (
           <div className="flex justify-between items-center">
