@@ -23,7 +23,6 @@ export default function SummaryCard({ result }) {
     diasPorTemporada,
     desglosePorTemporada,
     festivosEnRango,
-    tarifaExtra,
     cleaningFee,
     costoBase,
     huespedesExtras,
@@ -152,8 +151,7 @@ export default function SummaryCard({ result }) {
         {huespedesExtras > 0 && costoHuespedesExtras > 0 && (
           <div className="flex justify-between items-center">
             <span className="text-gray-600">
-              Huésped adicional ({huespedesExtras} x {noches}{' '}
-              {noches === 1 ? 'noche' : 'noches'} x {formatCurrency(tarifaExtra)}):
+              Huéspedes adicionales ({huespedesExtras} {huespedesExtras === 1 ? 'huésped' : 'huéspedes'}):
             </span>
             <span className="text-gray-900">
               {formatCurrency(costoHuespedesExtras)}

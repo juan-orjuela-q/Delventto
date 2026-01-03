@@ -73,8 +73,8 @@ export const TEMPORADAS_TURISTICAS = [
   {
     inicio: '2025-12-15',
     fin: '2026-01-15',
-    tipo: 'alta',
-    descripcion: 'Temporada Alta - Navidad y Año Nuevo',
+    tipo: 'navidad',
+    descripcion: 'Temporada Navidad y Año Nuevo',
   },
   
   // 2026
@@ -141,8 +141,8 @@ export const TEMPORADAS_TURISTICAS = [
   {
     inicio: '2026-12-15',
     fin: '2027-01-15',
-    tipo: 'alta',
-    descripcion: 'Temporada Alta - Navidad y Año Nuevo',
+    tipo: 'navidad',
+    descripcion: 'Temporada Navidad y Año Nuevo',
   },
   
   // 2027
@@ -177,7 +177,7 @@ export function determinarTemporada(fechaInicio, fechaSalida) {
   
   // Encontrar temporadas que intersectan con la estancia
   const temporadasEnEstancia = [];
-  let diasPorTemporada = { alta: 0, media: 0, baja: 0 };
+  let diasPorTemporada = { navidad: 0, alta: 0, media: 0, baja: 0 };
   
   for (let i = 0; i < noches; i++) {
     const diaActual = new Date(inicio);
@@ -290,9 +290,8 @@ function verificarSiFestivo(fechaInicio, fechaSalida) {
  * @param {string} nombreCliente - Nombre del cliente
  * @param {Date} fechaInicio - Fecha de check-in
  * @param {Date} fechaSalida - Fecha de check-out
- * @param {number} huespedes - Número de huéspedes
+ * @param {number} huespedes - Número de huéspedes (1-6)
  * @param {Object} tarifas - Tarifas base por temporada
- * @param {number} tarifaExtra - Tarifa por huésped adicional
  * @param {number} cleaningFee - Fee de limpieza
  * @param {number} descuento - Porcentaje de descuento (0-100)
  * @param {string} tipoDescuento - Tipo de descuento aplicado
@@ -304,7 +303,6 @@ export function calcularReservaConFechas({
   fechaSalida,
   huespedes,
   tarifas,
-  tarifaExtra,
   cleaningFee,
   descuento = 0,
   tipoDescuento = '',
@@ -313,8 +311,8 @@ export function calcularReservaConFechas({
   const { noches, diasPorTemporada } = info;
   
   // Validar huéspedes
-  if (huespedes < 1 || huespedes > 5) {
-    throw new Error('El número de huéspedes debe estar entre 1 y 5');
+  if (huespedes < 1 || huespedes > 6) {
+    throw new Error('El número de huéspedes debe estar entre 1 y 6');
   }
   
   // Calcular costo por cada temporada
@@ -334,9 +332,29 @@ export function calcularReservaConFechas({
     }
   }
   
-  // Cálculo de huéspedes extras
+  // Cálculo de huéspedes extras (5° y 6° huésped)
   const huespedesExtras = Math.max(0, huespedes - 4);
-  const costoHuespedesExtras = huespedesExtras * tarifaExtra * noches;
+  let costoHuespedesExtras = 0;
+  
+  if (huespedesExtras > 0) {
+    // Calcular costo por temporada para huéspedes adicionales
+    for (const [tipo, dias] of Object.entries(diasPorTemporada)) {
+      if (dias > 0) {
+        let tarifaPorHuespedPorNoche = 0;
+        
+        // Tarifas por temporada para huéspedes adicionales
+        if (tipo === 'navidad' || tipo === 'alta') {
+          tarifaPorHuespedPorNoche = 60000;
+        } else if (tipo === 'media') {
+          tarifaPorHuespedPorNoche = 50000;
+        } else if (tipo === 'baja') {
+          tarifaPorHuespedPorNoche = 40000;
+        }
+        
+        costoHuespedesExtras += huespedesExtras * tarifaPorHuespedPorNoche * dias;
+      }
+    }
+  }
   
   // Subtotal antes de descuento
   const subtotalAntesDescuento = costoBase + costoHuespedesExtras;
@@ -368,7 +386,6 @@ export function calcularReservaConFechas({
     descuento,
     tipoDescuento,
     montoDescuento,
-    tarifaExtra,
     cleaningFee,
     totalAlojamiento,
     totalFinal,

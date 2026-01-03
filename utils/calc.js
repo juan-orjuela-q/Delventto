@@ -2,20 +2,25 @@
  * Tarifas por defecto según temporada
  */
 export const DEFAULT_RATES = {
+  navidad: {
+    min: 620000,
+    max: 720000,
+    default: 670000,
+  },
   alta: {
     min: 440000,
     max: 540000,
     default: 490000,
   },
   media: {
-    min: 265000,
-    max: 365000,
-    default: 315000,
+    min: 340000,
+    max: 440000,
+    default: 390000,
   },
   baja: {
-    min: 180000,
-    max: 280000,
-    default: 230000,
+    min: 270000,
+    max: 370000,
+    default: 320000,
   },
 };
 

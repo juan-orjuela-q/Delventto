@@ -28,6 +28,7 @@ export default function Home() {
   const [huespedes, setHuespedes] = useState('2');
   
   // Estados de tarifas configurables por temporada
+  const [tarifaNavidad, setTarifaNavidad] = useState(DEFAULT_RATES.navidad.default);
   const [tarifaAlta, setTarifaAlta] = useState(DEFAULT_RATES.alta.default);
   const [tarifaMedia, setTarifaMedia] = useState(DEFAULT_RATES.media.default);
   const [tarifaBaja, setTarifaBaja] = useState(DEFAULT_RATES.baja.default);
@@ -70,10 +71,10 @@ export default function Home() {
 
     try {
       const huespedesNum = parseInt(huespedes);
+      const tarifaNavidadNum = parseFloat(tarifaNavidad);
       const tarifaAltaNum = parseFloat(tarifaAlta);
       const tarifaMediaNum = parseFloat(tarifaMedia);
       const tarifaBajaNum = parseFloat(tarifaBaja);
-      const tarifaExtraNum = huespedesNum === 5 ? parseFloat(tarifaExtra) : 0;
       const cleaningFeeNum = parseFloat(cleaningFee);
       const descuentoNum = parseFloat(descuento) || 0;
 
@@ -82,12 +83,16 @@ export default function Home() {
         setError('Debe seleccionar las fechas de ingreso y salida');
         return;
       }
-      if (huespedesNum < 1 || huespedesNum > 5) {
-        setError('El número de huéspedes debe estar entre 1 y 5');
+      if (huespedesNum < 1 || huespedesNum > 6) {
+        setError('El número de huéspedes debe estar entre 1 y 6');
         return;
       }
 
       // Validar rangos de tarifas
+      if (tarifaNavidadNum < DEFAULT_RATES.navidad.min || tarifaNavidadNum > DEFAULT_RATES.navidad.max) {
+        setError(`La tarifa navidad debe estar entre $${formatNumber(DEFAULT_RATES.navidad.min)} y $${formatNumber(DEFAULT_RATES.navidad.max)}`);
+        return;
+      }
       if (tarifaAltaNum < DEFAULT_RATES.alta.min || tarifaAltaNum > DEFAULT_RATES.alta.max) {
         setError(`La tarifa alta debe estar entre $${formatNumber(DEFAULT_RATES.alta.min)} y $${formatNumber(DEFAULT_RATES.alta.max)}`);
         return;
@@ -108,11 +113,11 @@ export default function Home() {
         fechaSalida,
         huespedes: huespedesNum,
         tarifas: {
+          navidad: tarifaNavidadNum,
           alta: tarifaAltaNum,
           media: tarifaMediaNum,
           baja: tarifaBajaNum,
         },
-        tarifaExtra: tarifaExtraNum,
         cleaningFee: cleaningFeeNum,
         descuento: descuentoNum,
         tipoDescuento: tipoDescuento,
@@ -131,6 +136,7 @@ export default function Home() {
     setFechaInicio('');
     setFechaSalida('');
     setHuespedes('2');
+    setTarifaNavidad(DEFAULT_RATES.navidad.default);
     setTarifaAlta(DEFAULT_RATES.alta.default);
     setTarifaMedia(DEFAULT_RATES.media.default);
     setTarifaBaja(DEFAULT_RATES.baja.default);
@@ -296,12 +302,12 @@ export default function Home() {
 
             {/* Número de huéspedes */}
             <Input
-              label="Número de huéspedes (máx. 5)"
+              label="Número de huéspedes (máx. 6)"
               type="number"
               value={huespedes}
               onChange={setHuespedes}
               min="1"
-              max="5"
+              max="6"
               placeholder="Ej: 2"
               required
             />
@@ -314,7 +320,19 @@ export default function Home() {
               
               <div className="space-y-4">
                 {/* Tarifas por temporada */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className={infoTemporada?.temporada === 'navidad' ? 'ring-2 ring-primary-400 bg-primary-50 rounded-lg p-3' : ''}>
+                    <Input
+                      label={`Navidad y Año Nuevo ($${formatNumber(DEFAULT_RATES.navidad.min)} - $${formatNumber(DEFAULT_RATES.navidad.max)})`}
+                      type="number"
+                      value={tarifaNavidad}
+                      onChange={setTarifaNavidad}
+                      min={DEFAULT_RATES.navidad.min}
+                      max={DEFAULT_RATES.navidad.max}
+                      step="1000"
+                      required
+                    />
+                  </div>
                   <div className={infoTemporada?.temporada === 'alta' ? 'ring-2 ring-primary-400 bg-primary-50 rounded-lg p-3' : ''}>
                     <Input
                       label={`Temporada Alta ($${formatNumber(DEFAULT_RATES.alta.min)} - $${formatNumber(DEFAULT_RATES.alta.max)})`}
@@ -354,19 +372,7 @@ export default function Home() {
                 </div>
 
                 {/* Otros cargos */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {parseInt(huespedes) === 5 && (
-                    <Input
-                      label="Tarifa por huésped adicional (5°)"
-                      type="number"
-                      value={tarifaExtra}
-                      onChange={setTarifaExtra}
-                      min="0"
-                      step="1000"
-                      required
-                    />
-                  )}
-
+                <div className="grid grid-cols-1 gap-4">
                   <Input
                     label="Fee de limpieza"
                     type="number"
@@ -375,8 +381,18 @@ export default function Home() {
                     min="0"
                     step="1000"
                     required
-                    className={parseInt(huespedes) === 5 ? '' : 'md:col-span-2'}
                   />
+                  {(parseInt(huespedes) === 5 || parseInt(huespedes) === 6) && (
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-sm text-blue-800">
+                        <span className="font-semibold">ℹ️ Cargos adicionales por huésped:</span><br />
+                        • Navidad/Alta: $60.000 por noche por huésped adicional<br />
+                        • Media: $50.000 por noche por huésped adicional<br />
+                        • Baja: $40.000 por noche por huésped adicional<br />
+                        <span className="text-xs mt-1 block">Aplica para el 5° y 6° huésped</span>
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Campo de descuento */}
